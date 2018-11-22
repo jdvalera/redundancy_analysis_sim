@@ -267,21 +267,8 @@ int main()
 	int spareCols = 2;
 
 	string availableSpares = "";
-	/*
-	for (int i = 0; i < spareRows; i++) {
-		spareSequence += "0";
-	}
-	for (int i = 0; i < spareCols; i++) {
-		spareSequence += "1";
-	}*/
 
-	//printArray(a, n);
-	//swap(a, 0, 3);
-	//printArray(a, n);
-	//printCombinations(a, 0, n);
 
-	//cout << s << endl;
-	//cout << stoi(s.substr(0,1)) + 1 << endl;
 	int n = availableSpares.size();
 	char *char_array = new char[n + 1];
 	availableSpares.copy(char_array, availableSpares.size() + 1);
@@ -296,41 +283,17 @@ int main()
 	cout << memblock.size() << endl;
 	for (int i = 0; i < spareOrder.size(); i++)
 		cout << i << " - " << spareOrder[i] << endl;
-	/*
-	cout << "combinations" << endl;
-	for (int i = 0; i < rowscols.size(); i++) {
-		cout << stoi(rowscols.substr(i, 1)) + 1 << endl;
-	}*/
 
-	/*
-	printMemBlock(memblock1);
-	cout << "\nAfter fault insertion" << endl;
-	insertFault(memblock1, 5);
-	insertFault(memblock1, 7);
-	insertFault(memblock1, 12);
-	insertFault(memblock1, 18);
-	insertFault(memblock1, 23);
-	printMemBlock(memblock1);
-	cout << "\nAfter fault correction" << endl;
-	useSpare(memblock1, 5, 0);
-	printMemBlock(memblock1);
-	cout << "\nAfter fault correction" << endl;
-	useSpare(memblock1, 23, 1);
-	printMemBlock(memblock1);
-
-	time_t end = time(0);
-	double time = difftime(end, start) * 1000.0;
-	cout << "Time Taken for algorithm " << time << endl;*/
 	cout << "Memory Block Without Faults:" << endl;
 	printMemBlock(memblock);
 	faults = generateFaults(memblock, numFaults);
-	//insertFaults(memblock1, faults);
+
 	cout << "\nAfter fault insertion" << endl;
 	cout << "Total Number of Faults: " << faults.size() << endl;
 	printMemBlock(memblock);
 	cout << endl;
 	cout << "Fault coordinates:" << endl;
-	//sort(faults.begin(), faults.end());
+
 	for (int i = 0; i < faults.size(); i++) {
 		cout << faults[i] << ", ";
 	}
