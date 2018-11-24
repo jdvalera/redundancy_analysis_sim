@@ -315,6 +315,12 @@ int main()
 	for (int i = 0; i < faults.size(); i++) {
 		int x = faults[i] / 6;
 		int y = faults[i] % 6;
+
+		// Coordinates rows: 0-5, cols: 0-11
+		if (x > 5) {
+			x = x - 6;
+			y = y + 6;
+		}
 		std::cout << "(" << x << ", " << y << "), ";
 	}
 	std::cout << endl;
