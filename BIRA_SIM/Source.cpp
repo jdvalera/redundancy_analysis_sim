@@ -25,6 +25,7 @@ void printCombinations(int a[], int k, int n);
 bool checkFixed(vector<int> &mem, int n);
 bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
+bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 
 // Algorithm from online
 int compare(const void *a, const void * b);
@@ -246,7 +247,7 @@ int main()
 	*/
 	int memSize = 72;
 	int blockSize = memSize / 2;
-	int numFaults = 10; // 11
+	int numFaults = 6; // 11
 	int block = 0;
 	int rowLength = 0; // 0 - single, 1 - double
 
@@ -459,6 +460,98 @@ void swap(int a[], int i, int k) {
 	a[k] = temp;
 }
 
+bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params) {
+	// 1 global global row, 1 common col, 2 local cols, 2 local rows
+	int faultIndex = params[0];
+	int GR = params[1];
+	int CC = params[2];
+	int LR1 = params[3];
+	int LC1 = params[4];
+	int LR2 = params[5];
+	int LC2 = params[6];
+
+	for (int j = 0; j < spareOrder.size(); j++) {
+		//std::cout << "Current fault index: " << faultIndex << endl;
+
+		//std::cout << "spareRow1 = " << spareRow1 << ", " << "spareCol1 = " << spareCol1 << ", "
+			//<< "spareRow2 = " << spareRow2 << ", " << "spareCol2 = " << spareCol2 << endl;
+
+		// Make sure fault index does not go out of range
+		if (faultIndex >= faults.size())
+			break;
+		int x = stoi(spareOrder.substr(j, 1));
+
+		while (checkFixed(mem, faults[faultIndex]) && faultIndex < faults.size() - 1) {
+			faultIndex++;
+			// Fault index is used in a for loop outside, so it must be less than the fault size
+			if (faultIndex >= faults.size() - 1)
+				break;
+		}
+
+
+		if (faults[faultIndex] > 35) {
+			if (x == 1 && LC2 == 0) {
+				//std::cout << "No more spare columns for block 2. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 1 && LC2 > 0) {
+				LC2--;
+			}
+			else if (x == 0 && LR2 == 0) {
+				//std::cout << "No more spare rows for block 2. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 0 && LR2 > 0) {
+				LR2--;
+			}
+			else if (x == 2 && GR == 0) {
+				//std::cout << "No global row available. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 2 && GR > 0) {
+				GR--;
+			}
+		}
+		else if (faults[faultIndex] <= 35) {
+			if (x == 1 && LC1 == 0) {
+				//std::cout << "No more spare columns for block 1. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 1 && LC1 > 0) {
+				LC1--;
+			}
+			else if (x == 0 && LR1 == 0) {
+				//std::cout << "No more spare rows for block 1. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 0 && LR1 > 0) {
+				LR1--;
+			}
+			else if (x == 2 && GR == 0) {
+				//std::cout << "No global row available. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 2 && GR > 0) {
+				GR--;
+			}
+		}
+
+		useSpare(mem, faults[faultIndex], x);
+		// ensure that fault index does not exceed fault size - 1
+		faultIndex++;
+	}
+
+	int faultCount = 0;
+	//std::cout << "Faulty cells left: " << endl;
+	for (int i = faultIndex; i < faults.size(); i++) {
+		if (!checkFixed(mem, faults[i])) {
+			faultCount++;
+			//std::cout << faults[i] << ", ";
+		}
+
+	}
+}
+
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params) {
 
 	for (int i = 0; i < spareOrder.size(); i++) {
@@ -622,6 +715,14 @@ void useSpare(vector<int> &mem, int n, int row_col) {
 			else {
 				mem[i * 6 + col] = 5;
 			}
+		}
+	}
+	else if (row_col == 2) {
+		for (int i = 0; i < 6; i++) {
+			mem[i + 6 * row] = 5;
+		}
+		for (int i = 0; i < 6; i++) {
+			mem[i + 6 * row + 36] = 5;
 		}
 	}
 }
