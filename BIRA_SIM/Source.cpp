@@ -72,26 +72,27 @@ vector<int> generateFaults(vector<int> &mem, int numFaults) {
 			insertFault(mem, n);
 		}
 	}
-	std::cout << "GENERATE FAULTS BEGIN" << endl;
+	//std::cout << "GENERATE FAULTS BEGIN" << endl;
 		for (int i = 0; i < block0_faults.size(); i++) {
-			std::cout << block0_faults[i] << ", ";
+			//std::cout << block0_faults[i] << ", ";
 		}
-		std::cout << endl;
+		//std::cout << endl;
 		for (int i = 0; i < block1_faults.size(); i++) {
-			std::cout << block1_faults[i] << ", ";
+			//std::cout << block1_faults[i] << ", ";
 		}
-		std::cout << endl;
+		//std::cout << endl;
 
 	sort(block0_faults.begin(), block0_faults.end());
 	sort(block1_faults.begin(), block1_faults.end());
-	std::cout << endl;
+	//std::cout << endl;
+	/*
 	for (int i = 0; i < block0_faults.size(); i++) {
 		std::cout << block0_faults[i] << ", ";
 	}
 	std::cout << endl;
 	for (int i = 0; i < block1_faults.size(); i++) {
 		std::cout << block1_faults[i] << ", ";
-	}
+	}*/
 
 	int i = 0;
 	int j = 0;
@@ -116,9 +117,9 @@ vector<int> generateFaults(vector<int> &mem, int numFaults) {
 		faults.push_back(block1_faults[j]);
 		j++;
 	}
-	std::cout << endl;
+	//std::cout << endl;
 
-	std::cout << "GENERATE FAULTS END" << endl;
+	//std::cout << "GENERATE FAULTS END" << endl;
 	return faults;
 }
 
@@ -320,9 +321,26 @@ int main()
 	params.push_back(spareCol1);
 	params.push_back(spareRow2);
 	params.push_back(spareCol2);
-	
-	if (!solveSimpleAll(memblock, spareOrder, faults, params))
-		std::cout << "Memory is not repairable.";
+
+	double percent = 0;
+	int attempts = 100;
+	double numSolved = 0;
+
+	for (int i = 0; i < attempts; i++) {
+		for (int i = 0; i < memSize; i++) {
+			memblock[i] = 0;
+		}
+		faults = generateFaults(memblock, numFaults);
+		if (solveSimpleAll(memblock, spareOrder, faults, params)) {
+			//std::cout << "Memory is not repairable.";
+			numSolved++;
+		}
+	}
+
+	percent = (double)numSolved / attempts;
+
+	std::cout << "After " << attempts << " attempts. The memory was repaired " << numSolved << " times." << endl;
+	std::cout << "Percent: " << percent << endl;
 
 	/*
 	for (int i = 0; i < spareOrder.size(); i++) {
@@ -451,7 +469,7 @@ bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faul
 		//std::cout << "-------------------------" << endl;
 
 		if (solveSimpleIteration(mem, spareOrder[i], faults, params)) {
-			std::cout << "Solved using combination " << spareOrder[i] << endl;
+			//std::cout << "Solved using combination " << spareOrder[i] << endl;
 			return true;
 		}
 	}
@@ -539,8 +557,8 @@ bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults
 	//std::cout << "Faults left: " << faultCount << endl;
 
 	if (faultCount == 0) {
-		printMemBlock(mem);
-		std::cout << endl;
+		//printMemBlock(mem);
+		//std::cout << endl;
 		return true;
 	}
 
