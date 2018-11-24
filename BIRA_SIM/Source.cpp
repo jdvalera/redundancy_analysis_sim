@@ -24,6 +24,7 @@ void useSpare(vector<int> &mem, int n, int row_col);
 void printCombinations(int a[], int k, int n);
 bool checkFixed(vector<int> &mem, int n);
 bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
+bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
 
 // Algorithm from online
 int compare(const void *a, const void * b);
@@ -319,7 +320,11 @@ int main()
 	params.push_back(spareCol1);
 	params.push_back(spareRow2);
 	params.push_back(spareCol2);
+	
+	if (!solveSimpleAll(memblock, spareOrder, faults, params))
+		std::cout << "Memory is not repairable.";
 
+	/*
 	for (int i = 0; i < spareOrder.size(); i++) {
 		faultIndex = 0;
 		spareRow1 = 2;
@@ -342,7 +347,7 @@ int main()
 		}
 
 		
-		/*
+		
 		for (int j = 0; j < spareOrder[i].size(); j++) {
 			std::cout << "Current fault index: " << faultIndex << endl;
 
@@ -416,13 +421,13 @@ int main()
 		//}
 
 		std::cout << "Memory after repair:" << endl;
-		printMemBlock(memTemp);*/
+		printMemBlock(memTemp);
 
 	}
 
 	//cout << "The memory is not repairable!" << endl;
-
-}
+	*/
+} 
 
 struct fault {
 	int x;
@@ -434,6 +439,24 @@ void swap(int a[], int i, int k) {
 	temp = a[i];
 	a[i] = a[k];
 	a[k] = temp;
+}
+
+bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params) {
+
+	for (int i = 0; i < spareOrder.size(); i++) {
+		//std::cout << endl;
+		//std::cout << "-------------------------" << endl;
+		//std::cout << "ITERATION: " << i << endl;
+		//std::cout << "SPARE ORDER: " << spareOrder[i] << endl;
+		//std::cout << "-------------------------" << endl;
+
+		if (solveSimpleIteration(mem, spareOrder[i], faults, params)) {
+			std::cout << "Solved using combination " << spareOrder[i] << endl;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params) {
