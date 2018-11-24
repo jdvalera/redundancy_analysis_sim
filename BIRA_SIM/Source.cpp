@@ -26,6 +26,7 @@ bool checkFixed(vector<int> &mem, int n);
 bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
 bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
+bool solveVariousAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
 
 // Algorithm from online
 int compare(const void *a, const void * b);
@@ -247,7 +248,7 @@ int main()
 	*/
 	int memSize = 72;
 	int blockSize = memSize / 2;
-	int numFaults = 6; // 11
+	int numFaults = 11; // 11
 	int block = 0;
 	int rowLength = 0; // 0 - single, 1 - double
 
@@ -266,6 +267,7 @@ int main()
 
 	// row - r, col - c
 	vector<string> spareOrder;
+	vector<string> spareOrderVarious;
 
 	int spareRows = 2;
 	int spareCols = 2;
@@ -281,13 +283,20 @@ int main()
 	availableSpares = "000111";
 	//char char_arrays[] = "01233";
 	char char_arrays[] = "0000111";
+	char char_arraysVarious[] = "200111";
 
 	time_t start = time(0);
 	sortedPermutations(char_arrays, spareOrder);
+	sortedPermutations(char_arraysVarious, spareOrderVarious);
 
 	std::cout << memblock.size() << endl;
+	/*
 	for (int i = 0; i < spareOrder.size(); i++)
 		std::cout << i << " - " << spareOrder[i] << endl;
+		*/
+
+	for (int i = 0; i < spareOrderVarious.size(); i++)
+		std::cout << i << " - " << spareOrderVarious[i] << endl;
 
 	std::cout << "Memory Block Without Faults:" << endl;
 	printMemBlock(memblock);
@@ -341,8 +350,40 @@ int main()
 	params2.push_back(LC2);
 
 	availableSpares = "200111";
+	//solveVariousAll(memblock, spareOrderVarious, faults, params2);
+	//solveVariousIteration(memblock, availableSpares, faults, params2);
 
-	solveVariousIteration(memblock, availableSpares, faults, params2);
+	
+	double percent = 0;
+	double percent2 = 0;
+	int attempts = 1000;
+	double numSolved = 0;
+	double numSolved2 = 0;
+
+	for (int i = 0; i < attempts; i++) {
+		for (int i = 0; i < memSize; i++) {
+			memblock[i] = 0;
+		}
+		faults = generateFaults(memblock, numFaults);
+		if (solveVariousAll(memblock, spareOrderVarious, faults, params2)) {
+			//std::cout << "Memory is not repairable.";
+			numSolved++;
+		}
+		if (solveSimpleAll(memblock, spareOrder, faults, params)) {
+			//std::cout << "Memory is not repairable.";
+			numSolved2++;
+		}
+	}
+
+	
+	percent = (double)numSolved / attempts;
+	percent2 = (double)numSolved2 / attempts;
+
+	std::cout << "After " << attempts << " attempts. The memory was repaired using various " << numSolved << " times." << endl;
+	std::cout << "Percent: " << percent << endl;
+
+	std::cout << "After " << attempts << " attempts. The memory was repaired using simple " << numSolved2 << " times." << endl;
+	std::cout << "Percent: " << percent2 << endl; 
 /*
 	double percent = 0;
 	int attempts = 100;
@@ -481,6 +522,24 @@ void swap(int a[], int i, int k) {
 	a[k] = temp;
 }
 
+bool solveVariousAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params) {
+
+	for (int i = 0; i < spareOrder.size(); i++) {
+		//std::cout << endl;
+		//std::cout << "-------------------------" << endl;
+		//std::cout << "ITERATION: " << i << endl;
+		//std::cout << "SPARE ORDER: " << spareOrder[i] << endl;
+		//std::cout << "-------------------------" << endl;
+
+		if (solveVariousIteration(mem, spareOrder[i], faults, params)) {
+			//std::cout << "Solved using combination " << spareOrder[i] << endl;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params) {
 	// 1 global global row, 1 common col, 2 local cols, 2 local rows
 	int faultIndex = params[0];
@@ -492,11 +551,11 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 	int LC2 = params[6];
 
 	for (int j = 0; j < spareOrder.size(); j++) {
-		std::cout << "Current fault index: " << faultIndex << endl;
+		//std::cout << "Current fault index: " << faultIndex << endl;
 
-		std::cout << "Global row = " << GR << ", " << "Common column = " << CC
-			<< ", " << "Local row1 = " << LR1 << ", " << "Local column1 = " << LC1
-			<< ", " << "Local row2 = " << LR2 << ", " << "Local column2 = " << LC2 << endl;
+	//std::cout << "Global row = " << GR << ", " << "Common column = " << CC
+			//<< ", " << "Local row1 = " << LR1 << ", " << "Local column1 = " << LC1
+			//<< ", " << "Local row2 = " << LR2 << ", " << "Local column2 = " << LC2 << endl;
 
 		// Make sure fault index does not go out of range
 		if (faultIndex >= faults.size())
@@ -513,25 +572,34 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 
 		if (faults[faultIndex] > 35) {
 			if (x == 1 && LC2 == 0) {
-				std::cout << "No more spare columns for block 2. Unsolvable." << endl;
-				if (CC > 1) {
+
+				if (CC > 0) {
+					//std::cout << "Using common column" << endl;
 					CC--;
 				}
-				break;
+				else {
+					//std::cout << "No more spare columns for block 2. Unsolvable." << endl;
+					break;
+				}
 			}
 			else if (x == 1 && LC2 > 0) {
 				LC2--;
 			}
 			else if (x == 0 && LR2 == 0) {
-				std::cout << "No more spare rows for block 2. Unsolvable." << endl;
+				//std::cout << "No more spare rows for block 2. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 0 && LR2 > 0) {
 				LR2--;
 			}
 			else if (x == 2 && GR == 0) {
-				std::cout << "No global row available. Unsolvable." << endl;
-				break;
+				if (LR2 > 0) {
+					LR2--;
+				}
+				else {
+					//std::cout << "No global row available. Unsolvable." << endl;
+					break;
+				}
 			}
 			else if (x == 2 && GR > 0) {
 				GR--;
@@ -539,25 +607,35 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 		}
 		else if (faults[faultIndex] <= 35) {
 			if (x == 1 && LC1 == 0) {
-				std::cout << "No more spare columns for block 1. Unsolvable." << endl;
-				if (CC > 1) {
+	
+				if (CC > 0) {
+					//std::cout << "Using common column" << endl;
 					CC--;
 				}
-				break;
+				else {
+					//std::cout << "No more spare columns for block 1. Unsolvable." << endl;
+					break;
+				}
 			}
 			else if (x == 1 && LC1 > 0) {
 				LC1--;
 			}
 			else if (x == 0 && LR1 == 0) {
-				std::cout << "No more spare rows for block 1. Unsolvable." << endl;
+				//std::cout << "No more spare rows for block 1. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 0 && LR1 > 0) {
 				LR1--;
 			}
 			else if (x == 2 && GR == 0) {
-				std::cout << "No global row available. Unsolvable." << endl;
-				break;
+				
+				if (LR1 > 0) {
+					LR1--;
+				}
+				else {
+					//std::cout << "No global row available. Unsolvable." << endl;
+					break;
+				}
 			}
 			else if (x == 2 && GR > 0) {
 				GR--;
@@ -569,8 +647,8 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 		faultIndex++;
 	}
 
-	std::cout << "Memory after repair:" << endl;
-	printMemBlock(mem);
+	//std::cout << "Memory after repair:" << endl;
+	//printMemBlock(mem);
 
 	int faultCount = 0;
 	//std::cout << "Faulty cells left: " << endl;
@@ -580,6 +658,12 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 			//std::cout << faults[i] << ", ";
 		}
 
+	}
+
+	if (faultCount == 0) {
+		//printMemBlock(mem);
+		//std::cout << endl;
+		return true;
 	}
 
 	return false;
