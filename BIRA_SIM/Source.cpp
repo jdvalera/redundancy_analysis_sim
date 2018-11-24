@@ -4,8 +4,8 @@
 #include <iostream>
 #include <string>
 #include <vector> 
-#include <stdio.h> 
-#include <stdlib.h> 
+//#include <stdio.h> 
+//#include <stdlib.h> 
 #include <string.h> 
 #include <time.h>
 #include <random>
@@ -23,6 +23,7 @@ bool isFaulty(vector<int> &mem, int n);
 void useSpare(vector<int> &mem, int n, int row_col);
 void printCombinations(int a[], int k, int n);
 bool checkFixed(vector<int> &mem, int n);
+bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 
 // Algorithm from online
 int compare(const void *a, const void * b);
@@ -70,25 +71,25 @@ vector<int> generateFaults(vector<int> &mem, int numFaults) {
 			insertFault(mem, n);
 		}
 	}
-	cout << "GENERATE FAULTS BEGIN" << endl;
+	std::cout << "GENERATE FAULTS BEGIN" << endl;
 		for (int i = 0; i < block0_faults.size(); i++) {
-			cout << block0_faults[i] << ", ";
+			std::cout << block0_faults[i] << ", ";
 		}
-	cout << endl;
+		std::cout << endl;
 		for (int i = 0; i < block1_faults.size(); i++) {
-			cout << block1_faults[i] << ", ";
+			std::cout << block1_faults[i] << ", ";
 		}
-	cout << endl;
+		std::cout << endl;
 
 	sort(block0_faults.begin(), block0_faults.end());
 	sort(block1_faults.begin(), block1_faults.end());
-	cout << endl;
+	std::cout << endl;
 	for (int i = 0; i < block0_faults.size(); i++) {
-		cout << block0_faults[i] << ", ";
+		std::cout << block0_faults[i] << ", ";
 	}
-	cout << endl;
+	std::cout << endl;
 	for (int i = 0; i < block1_faults.size(); i++) {
-		cout << block1_faults[i] << ", ";
+		std::cout << block1_faults[i] << ", ";
 	}
 
 	int i = 0;
@@ -114,9 +115,9 @@ vector<int> generateFaults(vector<int> &mem, int numFaults) {
 		faults.push_back(block1_faults[j]);
 		j++;
 	}
-	cout << endl;
+	std::cout << endl;
 
-	cout << "GENERATE FAULTS END" << endl;
+	std::cout << "GENERATE FAULTS END" << endl;
 	return faults;
 }
 
@@ -145,14 +146,14 @@ int main()
 		4 [] [0 1 0 0 1 0] [] [0 0 0 0 1 0] []
 		5 [] [0 0 0 0 0 0] [] [0 0 0 0 0 1] []
 			  0 1 2 3 4 5      0 1 2 3 4 5
-		     [][][][][][][][][][][][][][][]   Double Global
+		     [][][][][][]      [][][][][][]   2 Single local columns
 
-		              [][][][][][] Single Global
+		     [][][][][][][][][][][][][][][]   Global
 
-			Solve: DGR, SLC, SLC, SCC, SGR
+			Solve: GR, LC1, LC2, LR1, LR2
 
-		   1 single spare row, 1 double spare row, 1 common col, 2 local cols
-		   2 rows, 3 cols
+		   1 global global row, 1 common col, 2 local cols, 2 local rows
+		   3 rows, 3 cols
 
 			  0 - 35          36 - 71
 		0 [] [0 0 0 0 0 0]  [0 0 0 0 0 0] [] []
@@ -164,7 +165,7 @@ int main()
 			  0 1 2 3 4 5    0 1 2 3 4 5
 			 [][][][][][]    [][][][][][]    2 Single Local rows
 
-			 [][][][][][]                    1 single local row
+			 [][][][][][]    [][][][][][]    2 single local row
 
 		   Solve: R, R, C, C, R, C
 
@@ -243,7 +244,7 @@ int main()
 	*/
 	int memSize = 72;
 	int blockSize = memSize / 2;
-	int numFaults = 4; // 11
+	int numFaults = 10; // 11
 	int block = 0;
 	int rowLength = 0; // 0 - single, 1 - double
 
@@ -275,53 +276,85 @@ int main()
 	char_array[availableSpares.size()] = '\0';
 
 	availableSpares = "000111";
-	char char_arrays[] = "01233";
+	//char char_arrays[] = "01233";
+	char char_arrays[] = "0000111";
 
 	time_t start = time(0);
 	sortedPermutations(char_arrays, spareOrder);
 
-	cout << memblock.size() << endl;
+	std::cout << memblock.size() << endl;
 	for (int i = 0; i < spareOrder.size(); i++)
-		cout << i << " - " << spareOrder[i] << endl;
+		std::cout << i << " - " << spareOrder[i] << endl;
 
-	cout << "Memory Block Without Faults:" << endl;
+	std::cout << "Memory Block Without Faults:" << endl;
 	printMemBlock(memblock);
 	faults = generateFaults(memblock, numFaults);
 
-	cout << "\nAfter fault insertion" << endl;
-	cout << "Total Number of Faults: " << faults.size() << endl;
+	std::cout << "\nAfter fault insertion" << endl;
+	std::cout << "Total Number of Faults: " << faults.size() << endl;
 	printMemBlock(memblock);
-	cout << endl;
-	cout << "Fault coordinates:" << endl;
+	std::cout << endl;
+	std::cout << "Fault coordinates:" << endl;
 
 	for (int i = 0; i < faults.size(); i++) {
-		cout << faults[i] << ", ";
+		std::cout << faults[i] << ", ";
 	}
-	cout << endl;
+	std::cout << endl;
 	for (int i = 0; i < faults.size(); i++) {
 		int x = faults[i] / 6;
 		int y = faults[i] % 6;
-		cout << "(" << x << ", " << y << "), ";
+		std::cout << "(" << x << ", " << y << "), ";
 	}
-	cout << endl;
+	std::cout << endl;
 
 	int faultIndex = 0;
 	int spareRow1 = 2;
 	int spareCol1 = 1;
-	int spareRow2 = 1;
+	int spareRow2 = 2;
 	int spareCol2 = 2;
-		for (int i = 0; i < availableSpares.size(); i++) {
-			cout << "Current fault index: " << faultIndex << endl;
 
-			cout << "spareRow1 = " << spareRow1 << ", " << "spareCol1 = " << spareCol1 << ", "
+	vector<int> params;
+	params.push_back(faultIndex);
+	params.push_back(spareRow1);
+	params.push_back(spareCol1);
+	params.push_back(spareRow2);
+	params.push_back(spareCol2);
+
+	for (int i = 0; i < spareOrder.size(); i++) {
+		faultIndex = 0;
+		spareRow1 = 2;
+		spareCol1 = 1;
+		spareRow2 = 2;
+		spareCol2 = 2;
+		vector<int> memTemp;
+		for (int i = 0; i < memblock.size(); i++)
+			memTemp.push_back(memblock[i]);
+
+		std::cout << endl;
+		std::cout << "-------------------------" << endl;
+		std::cout << "ITERATION: " << i << endl;
+		std::cout << "SPARE ORDER: " << spareOrder[i] << endl;
+		std::cout << "-------------------------" << endl;
+
+		if (solveSimpleIteration(memblock, spareOrder[i], faults, params)) {
+			std::cout << "Solved using combination " << spareOrder[i] << endl;
+			break;
+		}
+
+		
+		/*
+		for (int j = 0; j < spareOrder[i].size(); j++) {
+			std::cout << "Current fault index: " << faultIndex << endl;
+
+			std::cout << "spareRow1 = " << spareRow1 << ", " << "spareCol1 = " << spareCol1 << ", "
 				<< "spareRow2 = " << spareRow2 << ", " << "spareCol2 = " << spareCol2 << endl;
 
 			// Make sure fault index does not go out of range
 			if (faultIndex >= faults.size())
 				break;
-			int x = stoi(availableSpares.substr(i, 1));
+			int x = stoi(spareOrder[i].substr(j, 1));
 
-			while (checkFixed(memblock, faults[faultIndex]) && faultIndex < faults.size() - 1) {
+			while (checkFixed(memTemp, faults[faultIndex]) && faultIndex < faults.size() - 1) {
 				faultIndex++;
 				// Fault index is used in a for loop outside, so it must be less than the fault size
 				if (faultIndex >= faults.size() - 1)
@@ -331,54 +364,63 @@ int main()
 
 			if (faults[faultIndex] > 35) {
 				if (x == 1 && spareCol2 == 0) {
-					cout << "No more spare columns for block 2. Unsolvable." << endl;
+					std::cout << "No more spare columns for block 2. Unsolvable." << endl;
 					break;
 				}
-				else if (x == 1 && spareCol2 > 0){
+				else if (x == 1 && spareCol2 > 0) {
 					spareCol2--;
-				}else if (x == 0 && spareRow2 == 0) {
-					cout << "No more spare rows for block 2. Unsolvable." << endl;
+				}
+				else if (x == 0 && spareRow2 == 0) {
+					std::cout << "No more spare rows for block 2. Unsolvable." << endl;
 					break;
-				} else if (x == 0 && spareRow2 > 0) {
+				}
+				else if (x == 0 && spareRow2 > 0) {
 					spareRow2--;
 				}
 			}
-			else if(faults[faultIndex] <= 35) {
+			else if (faults[faultIndex] <= 35) {
 				if (x == 1 && spareCol1 == 0) {
-					cout << "No more spare columns for block 1. Unsolvable." << endl;
+					std::cout << "No more spare columns for block 1. Unsolvable." << endl;
 					break;
 				}
 				else if (x == 1 && spareCol1 > 0) {
 					spareCol1--;
-				}else if (x == 0 && spareRow1 == 0) {
-					cout << "No more spare rows for block 1. Unsolvable." << endl;
+				}
+				else if (x == 0 && spareRow1 == 0) {
+					std::cout << "No more spare rows for block 1. Unsolvable." << endl;
 					break;
-				} else if (x == 0 && spareRow1 > 0) {
+				}
+				else if (x == 0 && spareRow1 > 0) {
 					spareRow1--;
 				}
 			}
 
-			useSpare(memblock, faults[faultIndex], x);
+			useSpare(memTemp, faults[faultIndex], x);
 			// ensure that fault index does not exceed fault size - 1
 			faultIndex++;
-			
+
 		}
 		int faultCount = 0;
-		cout << "Faulty cells left: " << endl;
+		std::cout << "Faulty cells left: " << endl;
 		for (int i = faultIndex; i < faults.size(); i++) {
-			if (!checkFixed(memblock, faults[i])) {
+			if (!checkFixed(memTemp, faults[i])) {
 				faultCount++;
-				cout << faults[i] << ", ";
+				std::cout << faults[i] << ", ";
 			}
 		}
-		cout << endl;
-		cout << "Faults left: " << faultCount << endl;
+		std::cout << endl;
+		std::cout << "Faults left: " << faultCount << endl;
+
 		//if (spareRows == 0 && spareCols == 0) {
 			//break;
 		//}
 
-	cout << "Memory after repair:" << endl;
-	printMemBlock(memblock);
+		std::cout << "Memory after repair:" << endl;
+		printMemBlock(memTemp);*/
+
+	}
+
+	//cout << "The memory is not repairable!" << endl;
 
 }
 
@@ -394,25 +436,120 @@ void swap(int a[], int i, int k) {
 	a[k] = temp;
 }
 
+bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params) {
+	if (params.size() < 1 || params.size() < 5)
+		return false;
+
+	int faultIndex = params[0];
+	int spareRow1 = params[1];
+	int spareCol1 = params[2];
+	int spareRow2 = params[3];
+	int spareCol2 = params[4];
+
+	for (int j = 0; j < spareOrder.size(); j++) {
+		//std::cout << "Current fault index: " << faultIndex << endl;
+
+		//std::cout << "spareRow1 = " << spareRow1 << ", " << "spareCol1 = " << spareCol1 << ", "
+			//<< "spareRow2 = " << spareRow2 << ", " << "spareCol2 = " << spareCol2 << endl;
+
+		// Make sure fault index does not go out of range
+		if (faultIndex >= faults.size())
+			break;
+		int x = stoi(spareOrder.substr(j, 1));
+
+		while (checkFixed(mem, faults[faultIndex]) && faultIndex < faults.size() - 1) {
+			faultIndex++;
+			// Fault index is used in a for loop outside, so it must be less than the fault size
+			if (faultIndex >= faults.size() - 1)
+				break;
+		}
+
+
+		if (faults[faultIndex] > 35) {
+			if (x == 1 && spareCol2 == 0) {
+				//std::cout << "No more spare columns for block 2. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 1 && spareCol2 > 0) {
+				spareCol2--;
+			}
+			else if (x == 0 && spareRow2 == 0) {
+				//std::cout << "No more spare rows for block 2. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 0 && spareRow2 > 0) {
+				spareRow2--;
+			}
+		}
+		else if (faults[faultIndex] <= 35) {
+			if (x == 1 && spareCol1 == 0) {
+				//std::cout << "No more spare columns for block 1. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 1 && spareCol1 > 0) {
+				spareCol1--;
+			}
+			else if (x == 0 && spareRow1 == 0) {
+				//std::cout << "No more spare rows for block 1. Unsolvable." << endl;
+				break;
+			}
+			else if (x == 0 && spareRow1 > 0) {
+				spareRow1--;
+			}
+		}
+
+		useSpare(mem, faults[faultIndex], x);
+		// ensure that fault index does not exceed fault size - 1
+		faultIndex++;
+
+	}
+
+	int faultCount = 0;
+	//std::cout << "Faulty cells left: " << endl;
+	for (int i = faultIndex; i < faults.size(); i++) {
+		if (!checkFixed(mem, faults[i])) {
+			faultCount++;
+			//std::cout << faults[i] << ", ";
+		}
+	}
+	
+	//std::cout << "Faults left: " << faultCount << endl;
+
+	if (faultCount == 0) {
+		printMemBlock(mem);
+		std::cout << endl;
+		return true;
+	}
+
+	//if (spareRows == 0 && spareCols == 0) {
+		//break;
+	//}
+
+	//std::cout << "Memory after repair:" << endl;
+	//printMemBlock(mem);
+
+	return false;
+}
+
 void printMemBlock(vector<int> mem) {
 
 	int rowSize = mem.size() / 12;
 	int blockSize = mem.size() / 2;
 	for (int i = 0; i < mem.size() / 2; i++) {
 		if (i % 6 == 0)
-			cout << "[ ";
-		cout << mem[i] << " ";
+			std::cout << "[ ";
+		std::cout << mem[i] << " ";
 		if (i % 6 == 5)
-			cout << "]";
+			std::cout << "]";
 
 		if (i % 6 == 5) {
-			cout << " ";
+			std::cout << " ";
 			for (int j = 0; j < rowSize; j++) {
 				if ((j + blockSize) % 6 == 0)
-					cout << "[ ";
-				cout << mem[j + blockSize + (i/rowSize) * rowSize] << " ";
+					std::cout << "[ ";
+				std::cout << mem[j + blockSize + (i/rowSize) * rowSize] << " ";
 				if ((j + blockSize) % 6 == 5)
-					cout << "]" << endl;
+					std::cout << "]" << endl;
 			}
 		}
 	}
@@ -536,9 +673,9 @@ void sortedPermutations(char str[], vector<string> &rowcol)
 
 void printArray(int a[], int n) {
 	for (int i = 0; i < n; i++) {
-		cout << a[i] << " ";
+		std::cout << a[i] << " ";
 	}
-	cout << endl;
+	std::cout << endl;
 }
 
 int xyTo1D(int x, int y, int length) {
