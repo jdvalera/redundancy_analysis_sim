@@ -323,6 +323,27 @@ int main()
 	params.push_back(spareRow2);
 	params.push_back(spareCol2);
 
+	int fIndex = 0;
+	int GR = 1;
+	int CC = 1;
+	int LR1 = 1;
+	int LC1 = 1;
+	int LR2 = 1;
+	int LC2 = 1;
+
+	vector<int> params2;
+	params2.push_back(fIndex);
+	params2.push_back(GR);
+	params2.push_back(CC);
+	params2.push_back(LR1);
+	params2.push_back(LC1);
+	params2.push_back(LR2);
+	params2.push_back(LC2);
+
+	availableSpares = "200111";
+
+	solveVariousIteration(memblock, availableSpares, faults, params2);
+/*
 	double percent = 0;
 	int attempts = 100;
 	double numSolved = 0;
@@ -341,7 +362,7 @@ int main()
 	percent = (double)numSolved / attempts;
 
 	std::cout << "After " << attempts << " attempts. The memory was repaired " << numSolved << " times." << endl;
-	std::cout << "Percent: " << percent << endl;
+	std::cout << "Percent: " << percent << endl; */
 
 	/*
 	for (int i = 0; i < spareOrder.size(); i++) {
@@ -471,10 +492,11 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 	int LC2 = params[6];
 
 	for (int j = 0; j < spareOrder.size(); j++) {
-		//std::cout << "Current fault index: " << faultIndex << endl;
+		std::cout << "Current fault index: " << faultIndex << endl;
 
-		//std::cout << "spareRow1 = " << spareRow1 << ", " << "spareCol1 = " << spareCol1 << ", "
-			//<< "spareRow2 = " << spareRow2 << ", " << "spareCol2 = " << spareCol2 << endl;
+		std::cout << "Global row = " << GR << ", " << "Common column = " << CC
+			<< ", " << "Local row1 = " << LR1 << ", " << "Local column1 = " << LC1
+			<< ", " << "Local row2 = " << LR2 << ", " << "Local column2 = " << LC2 << endl;
 
 		// Make sure fault index does not go out of range
 		if (faultIndex >= faults.size())
@@ -491,21 +513,24 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 
 		if (faults[faultIndex] > 35) {
 			if (x == 1 && LC2 == 0) {
-				//std::cout << "No more spare columns for block 2. Unsolvable." << endl;
+				std::cout << "No more spare columns for block 2. Unsolvable." << endl;
+				if (CC > 1) {
+					CC--;
+				}
 				break;
 			}
 			else if (x == 1 && LC2 > 0) {
 				LC2--;
 			}
 			else if (x == 0 && LR2 == 0) {
-				//std::cout << "No more spare rows for block 2. Unsolvable." << endl;
+				std::cout << "No more spare rows for block 2. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 0 && LR2 > 0) {
 				LR2--;
 			}
 			else if (x == 2 && GR == 0) {
-				//std::cout << "No global row available. Unsolvable." << endl;
+				std::cout << "No global row available. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 2 && GR > 0) {
@@ -514,21 +539,24 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 		}
 		else if (faults[faultIndex] <= 35) {
 			if (x == 1 && LC1 == 0) {
-				//std::cout << "No more spare columns for block 1. Unsolvable." << endl;
+				std::cout << "No more spare columns for block 1. Unsolvable." << endl;
+				if (CC > 1) {
+					CC--;
+				}
 				break;
 			}
 			else if (x == 1 && LC1 > 0) {
 				LC1--;
 			}
 			else if (x == 0 && LR1 == 0) {
-				//std::cout << "No more spare rows for block 1. Unsolvable." << endl;
+				std::cout << "No more spare rows for block 1. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 0 && LR1 > 0) {
 				LR1--;
 			}
 			else if (x == 2 && GR == 0) {
-				//std::cout << "No global row available. Unsolvable." << endl;
+				std::cout << "No global row available. Unsolvable." << endl;
 				break;
 			}
 			else if (x == 2 && GR > 0) {
@@ -541,15 +569,20 @@ bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> fault
 		faultIndex++;
 	}
 
+	std::cout << "Memory after repair:" << endl;
+	printMemBlock(mem);
+
 	int faultCount = 0;
 	//std::cout << "Faulty cells left: " << endl;
-	for (int i = faultIndex; i < faults.size(); i++) {
+	for (int i = 0; i < faults.size(); i++) {
 		if (!checkFixed(mem, faults[i])) {
 			faultCount++;
 			//std::cout << faults[i] << ", ";
 		}
 
 	}
+
+	return false;
 }
 
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params) {
@@ -721,8 +754,15 @@ void useSpare(vector<int> &mem, int n, int row_col) {
 		for (int i = 0; i < 6; i++) {
 			mem[i + 6 * row] = 5;
 		}
-		for (int i = 0; i < 6; i++) {
-			mem[i + 6 * row + 36] = 5;
+		if (n > 35) {
+			for (int i = 0; i < 6; i++) {
+				mem[i + 6 * (row - 6)] = 5;
+			}
+		}
+		else {
+			for (int i = 0; i < 6; i++) {
+				mem[i + 6 * (row + 6)] = 5;
+			}
 		}
 	}
 }
