@@ -27,6 +27,146 @@ bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
 bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 bool solveVariousAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
+bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>> &pCAM, vector<vector<int>> &numFaults);
+bool insertIntoNPCAM(int pIndex, int fault, int dir, int addr, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults);
+void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults);
+bool solveProposedIteration(vector<int> mem, vector<int> faults, vector<int> params);
+vector<int> faultToRowCol(int fault);
+
+// Constants
+const int spareRow1 = 2;
+const int spareCol1 = 1;
+const int spareRow2 = 2;
+const int spareCol2 = 2;
+
+const int GR = 1;
+const int CC = 1;
+const int LR1 = 1;
+const int LC1 = 1;
+const int LR2 = 1;
+const int LC2 = 1;
+const int availableSpares = 6;
+const int colSpares1 = 2;
+const int colSpares2 = 2;
+const int rowSpares1 = 2;
+const int rowSpares2 = 2;
+
+// pCAM, npCAM, numFaults indexes
+const int pEn = 0;
+const int pRow = 1;
+const int pCol = 2;
+const int pGrow = 3;
+const int pGcol = 4;
+const int pLrow = 5;
+const int pLcol = 6;
+const int pMrow = 7;
+const int pMcol = 8;
+
+// npCAM indexes
+const int nEn = 0;
+const int nPtr = 1;
+const int nDesc = 2;
+const int nAddr = 3;
+
+// numFaults indexes
+const int numLrow = 0;
+const int numLcol = 1;
+const int numGrow = 2;
+const int numGcol = 3;
+
+void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &nCAM, vector<vector<int>> &numFaults) {
+
+	for (int i = 0; i < faults.size(); i++) {
+		int fault = faults[i];
+		vector<int> coords = faultToRowCol(fault);
+		int row = coords[0]; // faultToRowCol(faults[i]))
+		int col = coords[1]; // faultToRowCol(faults[i]))
+
+		if (pCAM.empty()) {
+			insertIntoPCAM(coords, availableSpares, pCAM, numFaults);
+			// insertIntoPCAM(fault)
+			// if (pCAM.size() + 1 > availableSpares)
+			//    return;
+			// vector<int> entry = {1, row, col, Grow, Gcol, Lrow, Lcol, Mrow, Mcol};
+			// pCAM.push_back(entry);
+			// fault_num = {0, 0, 0, 0}
+			// numFaults.push_back(fault_num)
+		}
+		else {
+			for (int i = 0; i < pCAM.size(); i++) {
+				if (pCAM[i][1] == row) {
+					// insertIntoNPCAM(i, fault, 1, col, numFaults)
+					/*
+					  if (fault > 35) {
+						if (PCAM[i][col] > 5) {
+							pCAM[i][Lrow] = 1;
+							numFaults[i][Lrow]++;
+
+							if (numFaults[i][Lrow] > colSpares2) {
+								pCAM[i][Mrow] = 1
+								return;
+							}
+						}
+						else if (pCAM[i][col] < 5) {
+							pCAM[i][Grow] = 1;
+							numFaults[i][Grow]++;
+						}
+					  }
+					  else if (fault <= 35)
+					  {
+						 if (PCAM[i][col] > 5) {
+							pCAM[i][Grow] = 1;
+							numFaults[i][Grow]++;
+							if (numFaults[i][Lcol] > colSpares1) {
+								pCAM[i][Mrow] = 1
+								return;
+							}
+						}
+						else if (pCAM[col] < 5) {
+							pCAM[i][Lrow] = 1;
+							numFaults[i][Lrow]++;
+						}
+						npEntry = {1, i, direction, col)
+						npCAM.push_back(npEntry)
+					  }
+					*/
+					break;
+				}
+				else if (pCAM[i][2] == col) {
+					// insertIntoNPCAM(i, fault, 0, row)
+					/*
+						pCAM[i][Lcol] = 1;
+						numFaults[i][Lcol]++;
+						pCAM[i][Lcol] = 1;
+
+						if (fault > 35) {
+							if (numFaults[i][Lcol] > rowSpares2) {
+								pCAM[i][Mcol] = 1
+								return;
+							}
+						}
+						else if (fault <= 35)
+						{
+							if (numFaults[i][Lcol] > rowSpares1) {
+								pCAM[i][Mcol] = 1
+								return;
+							}
+						}
+						npEntry = {1, i, direction, row)
+						npCAM.push_back(npEntry)
+					*/
+					break;
+				}
+			}
+			insertIntoPCAM(coords, availableSpares, pCAM, numFaults);
+			// insertIntoPCAM(fault)
+			// vector<int> entry = {1, row, col, Grow, Gcol, Lrow, Lcol, Mrow, Mcol};
+			// pCAM.push_back(entry);
+			// fault_num = {0, 0, 0, 0}
+			// numFaults.push_back(fault_num)
+		}
+	}
+}
 
 // Algorithm from online
 int compare(const void *a, const void * b);
@@ -326,10 +466,12 @@ int main()
 	std::cout << endl;
 
 	int faultIndex = 0;
+	/*
 	int spareRow1 = 2;
 	int spareCol1 = 1;
 	int spareRow2 = 2;
 	int spareCol2 = 2;
+	*/
 
 	vector<int> params;
 	params.push_back(faultIndex);
@@ -339,12 +481,14 @@ int main()
 	params.push_back(spareCol2);
 
 	int fIndex = 0;
+	/*
 	int GR = 1;
 	int CC = 1;
 	int LR1 = 1;
 	int LC1 = 1;
 	int LR2 = 1;
 	int LC2 = 1;
+	*/
 
 	vector<int> params2;
 	params2.push_back(fIndex);
@@ -952,5 +1096,108 @@ void printArray(int a[], int n) {
 
 int xyTo1D(int x, int y, int length) {
 	return (x % length) + (length * y);
+}
+
+bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>> &pCAM, 
+	vector<vector<int>> &numFaults) {
+	int row = coords[0];
+	int col = coords[1];
+
+	// insertIntoPCAM(fault)
+			// if (pCAM.size() + 1 > availableSpares)
+			//    return;
+			// vector<int> entry = {1, row, col, Grow, Gcol, Lrow, Lcol, Mrow, Mcol};
+			// pCAM.push_back(entry);
+			// fault_num = {0, 0, 0, 0}
+			// numFaults.push_back(fault_num)
+	if (pCAM.size() + 1 > availableSpares)
+		return false;
+
+	vector<int> entry = { 1, row, col, 0, 0, 0, 0, 0, 0 };
+	vector<int> fault_num = { 0, 0, 0, 0 };
+
+	pCAM.push_back(entry);
+	numFaults.push_back(fault_num);
+
+	return true;
+}
+
+bool insertIntoNPCAM(int pIndex, int fault, int dir, int addr,
+	vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults) {
+	vector<int> npEntry;
+
+	if (dir == 1) {
+		if (fault > 35) {
+			if (pCAM[pIndex][pCol] > 5) {
+				pCAM[pIndex][pLrow] = 1;
+				numFaults[pIndex][numLrow]++;
+
+				if (numFaults[pIndex][pLrow] > colSpares2) {
+					pCAM[pIndex][pMrow] = 1;
+					return false;
+				}
+			}
+			else {
+				if (pCAM[pIndex][pCol] < 5) {
+					pCAM[pIndex][pGrow] = 1;
+					numFaults[pIndex][numGrow] ++;
+				}
+			}
+		}
+		else if (fault <= 35) {
+			if (pCAM[pIndex][pCol] > 5) {
+				pCAM[pIndex][pGrow] = 1;
+				numFaults[pIndex][pGrow]++;
+
+				if (numFaults[pIndex][pLcol] > colSpares1) {
+					pCAM[pIndex][pMrow] = 1;
+					return false;
+				}
+			}
+			else if (pCAM[pIndex][pCol] < 5) {
+				pCAM[pIndex][pLrow] = 1;
+				numFaults[pIndex][pLcol]++;
+			}
+		}
+	}
+	else {
+		pCAM[pIndex][pLcol] = 1;
+		numFaults[pIndex][pLcol]++;
+		pCAM[pIndex][pLcol] = 1;
+
+		if (fault > 35) {
+			if (numFaults[pIndex][pLcol] > rowSpares2) {
+				pCAM[pIndex][pMcol] = 1;
+				return false;
+			}
+		}
+		else if (fault <= 35) {
+			if (numFaults[pIndex][pLcol] > rowSpares1) {
+				pCAM[pIndex][pMcol] = 1;
+				return false;
+			}
+		}
+	}
+
+	npEntry = { 1, pIndex, dir, addr };
+	npCAM.push_back(npEntry);
+
+	return true;
+}
+
+vector<int> faultToRowCol(int fault) {
+	vector<int> rc;
+	int x = fault / 6;
+	int y = fault % 6;
+
+	// Coordinates rows: 0-5, cols: 0-11
+	if (x > 5) {
+		x = x - 6;
+		y = y + 6;
+	}
+	rc.push_back(x);
+	rc.push_back(y);
+
+	return rc;
 }
 
