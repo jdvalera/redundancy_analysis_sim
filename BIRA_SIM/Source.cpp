@@ -27,11 +27,14 @@ bool solveSimpleIteration(vector<int> mem, string spareOrder, vector<int> faults
 bool solveSimpleAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
 bool solveVariousIteration(vector<int> mem, string spareOrder, vector<int> faults, vector<int> params);
 bool solveVariousAll(vector<int> mem, vector<string> spareOrder, vector<int> faults, vector<int> params);
-bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>> &pCAM, vector<vector<int>> &numFaults);
-bool insertIntoNPCAM(int pIndex, int fault, int dir, int addr, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults);
-void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults);
+bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>> &pCAM, vector<int> mem);
+bool insertIntoNPCAM(int pIndex, int fault, int dir, int addr, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<int> mem);
+void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<int> mem);
 bool solveProposedIteration(vector<int> mem, vector<int> faults, vector<int> params);
+bool solveGlobalFaults(vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults);
 vector<int> faultToRowCol(int fault);
+int rowColToFault(int row, int col);
+int countFaults(vector<int> mem, int row, int col, int dir, int global);
 
 // Constants
 const int spareRow1 = 2;
@@ -92,7 +95,87 @@ void printNPCAM(vector<vector<int>> &npCAM) {
 	}
 }
 
-void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults) {
+bool solveGlobalFaults(vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults) {
+	/*
+	globalRow = GR;
+	vector<int> globalFaults;
+	for (int i = 0; i < pCAM.size(); i++) 
+		if (pCAM[i][pGrow] == 1) {
+			globalFaults.push_back(i);
+		}
+	}
+
+	while(!globalFaults.empty()) {
+		if (globalRow = 0)
+			break;
+		x = findMaxFaults(globalFaults, numFaults, index)
+		r = pCAM[x][pRow]
+		c = pCAM[x]pCol]
+		fault = rowColToFault(r, c)
+		dir = 2;
+		useSpare(mem, fault, dir)
+		globalRow--;
+		pCAM[x][gRow] = 0;
+		pCAM[x][pEn] = 0;
+
+		for(int i = 0; i < npCAM.size(); i++) {
+			if (npCAM[i][0] == 1) {
+				if (npCAM[i][nPtr] == x && npCAM[i][nDesc] == 1)  
+					npCAM[i][0] = 0;
+					pCAM[x][pMrow] = 0;
+
+					if (pCAM[x][pCol] > 5) {
+						if (npCAM[i][nAddr] > 5)
+							numFaults[x][numLcol]--;
+						else if (npCAM[i][nAddr] < 5)
+							numFaults[x][numGcol]--;
+					else if (pCAM[x][pCol] < 5) 
+						if (npCAM[i][nAddr] < 5
+							numFaults[x][numLcol]--;
+						else if (npCAM[i][nAddr] > 5)
+							numFaults[x][numGcol]++;
+					} if
+
+				} if
+			} for
+
+			newPivotIndex = 0
+			newPivot = false
+
+			for(int i = 0; i < npCAM.size(); i++) {
+			if (npCAM[i][0] == 1) {
+				if (npCAM[i][nPtr] == x && npCAM[i][nDesc] == 0)
+					newPivotIndex = i;
+					newPivot = true;
+					npCAM[i][0] = 0;
+					break;
+			} for
+
+			if (newPivot) {
+				if (npCAM[newPivotIndex][nDesc] == 0)
+					pCAM[x][pRow] = npCAM[newPivotIndex][nAddr];
+				else
+					pCAM[x][newPivotIndex][pCol] = npCAM[newPivotIndex][nAddr];
+
+				pCAM[x][pEn] = 1;
+			}
+
+		} while
+
+	  // remove last current index
+	  lastIndex = globalFaults.size() - 1
+	  temp = globalFaults[x]
+	  globalFaults[x] = globalFaults[lastIndex]
+	  globalFaults[lastIndex] = temp
+	  globalFaults.pop_back();
+	}
+
+	Turn other global faults into local faults or single faults
+	*/
+	return true;
+}
+
+void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<int> mem) {
 
 	for (int i = 0; i < faults.size(); i++) {
 		int fault = faults[i];
@@ -101,26 +184,26 @@ void populateCAM(vector<int> faults, vector<vector<int>> &pCAM, vector<vector<in
 		int col = coords[1]; 
 
 		if (pCAM.empty()) {
-			insertIntoPCAM(coords, availableSpares, pCAM, numFaults);
+			insertIntoPCAM(coords, availableSpares, pCAM, mem);
 		}
 		else {
 			bool validPivot = true;
 			for (int i = 0; i < pCAM.size(); i++) {
 				if (pCAM[i][1] == row) {
 					// insertIntoNPCAM(i, fault, 1, col, numFaults)
-					insertIntoNPCAM(i, fault, 1, col, pCAM, npCAM, numFaults);
+					insertIntoNPCAM(i, fault, 1, col, pCAM, npCAM, mem);
 					validPivot = false;
 					break;
 				}
 				else if (pCAM[i][2] == col) {
 					// insertIntoNPCAM(i, fault, 0, row)
-					insertIntoNPCAM(i, fault, 0, row, pCAM, npCAM, numFaults);
+					insertIntoNPCAM(i, fault, 0, row, pCAM, npCAM, mem);
 					validPivot = false;
 					break;
 				}
 			}
 			if (validPivot)
-				insertIntoPCAM(coords, availableSpares, pCAM, numFaults);
+				insertIntoPCAM(coords, availableSpares, pCAM, mem);
 		}
 	}
 }
@@ -422,7 +505,7 @@ int main()
 	std::cout << "Percent: " << percent2 << endl; 
 	*/
 
-	populateCAM(faults, pCAM, npCAM, numFaults);
+	populateCAM(faults, pCAM, npCAM, memblock);
 	printPCAM(pCAM);
 	std::cout << endl;
 	printNPCAM(npCAM);
@@ -991,7 +1074,7 @@ int xyTo1D(int x, int y, int length) {
 }
 
 bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>> &pCAM, 
-	vector<vector<int>> &numFaults) {
+	vector<int> mem) {
 	int row = coords[0];
 	int col = coords[1];
 
@@ -999,65 +1082,74 @@ bool insertIntoPCAM(vector<int> coords, int availableSpares, vector<vector<int>>
 		return false;
 
 	vector<int> entry = { 1, row, col, 0, 0, 0, 0, 0, 0 };
-	vector<int> fault_num = { 0, 0, 0, 0 };
+	//vector<int> fault_num = { 1, 1, 0, 0 };
 
 	pCAM.push_back(entry);
-	numFaults.push_back(fault_num);
+	//numFaults.push_back(fault_num);
 
 	return true;
 }
 
 bool insertIntoNPCAM(int pIndex, int fault, int dir, int addr,
-	vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<vector<int>> &numFaults) {
+	vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, vector<int> mem) {
 	vector<int> npEntry;
 
 	if (dir == 1) {
 		if (fault > 35) {
 			if (pCAM[pIndex][pCol] > 5) {
 				pCAM[pIndex][pLrow] = 1;
-				numFaults[pIndex][numLrow]++;
-
-				if (numFaults[pIndex][numLrow] > colSpares2) {
+				//numFaults[pIndex][numLrow]++;
+				
+				// countFaults(row, col, dir, global)
+				//if (numFaults[pIndex][numLrow] > colSpares2) {
+				//std::cout << "FAULTS: " << countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 0, 0) << endl;
+				if (countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 0, 0) > colSpares2) {
 					pCAM[pIndex][pMrow] = 1;
 					return false;
 				}
 			}
 			else {
-				if (pCAM[pIndex][pCol] < 5) {
+				if (pCAM[pIndex][pCol] <= 5) {
 					pCAM[pIndex][pGrow] = 1;
-					numFaults[pIndex][numGrow] ++;
+					//numFaults[pIndex][numGrow] ++;
 				}
 			}
 		}
 		else if (fault <= 35) {
 			if (pCAM[pIndex][pCol] > 5) {
 				pCAM[pIndex][pGrow] = 1;
-				numFaults[pIndex][numGrow]++;
+				//numFaults[pIndex][numGrow]++;
 
-				if (numFaults[pIndex][pLcol] > colSpares1) {
+				
+			}
+			else if (pCAM[pIndex][pCol] <= 5) {
+				pCAM[pIndex][pLrow] = 1;
+				//numFaults[pIndex][numLcol]++;
+
+				//if (numFaults[pIndex][pLcol] > colSpares1) {
+				//std::cout << "FAULTS: " << countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 0, 0) << endl;
+				if (countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 0, 0) > colSpares1) {
 					pCAM[pIndex][pMrow] = 1;
 					return false;
 				}
-			}
-			else if (pCAM[pIndex][pCol] < 5) {
-				pCAM[pIndex][pLrow] = 1;
-				numFaults[pIndex][numLcol]++;
 			}
 		}
 	}
 	else {
 		pCAM[pIndex][pLcol] = 1;
-		numFaults[pIndex][numLcol]++;
+		//numFaults[pIndex][numLcol]++;
 		pCAM[pIndex][pLcol] = 1;
 
 		if (fault > 35) {
-			if (numFaults[pIndex][numLcol] > rowSpares2) {
+			//if (numFaults[pIndex][numLcol] > rowSpares2) {
+			if (countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 1, 0) > rowSpares2) {
 				pCAM[pIndex][pMcol] = 1;
 				return false;
 			}
 		}
 		else if (fault <= 35) {
-			if (numFaults[pIndex][numLcol] > rowSpares1) {
+			//if (numFaults[pIndex][numLcol] > rowSpares1) {
+			if (countFaults(mem, pCAM[pIndex][pRow], pCAM[pIndex][pCol], 1, 0) > rowSpares2) {
 				pCAM[pIndex][pMcol] = 1;
 				return false;
 			}
@@ -1084,5 +1176,79 @@ vector<int> faultToRowCol(int fault) {
 	rc.push_back(y);
 
 	return rc;
+}
+
+int rowColToFault(int r, int c) {
+	int fault = xyTo1D(c, r, 6);
+	
+	if (c > 5) {
+		r = r + 6;
+		c = c - 6;
+	}
+
+	fault = xyTo1D(c, r, 6);
+
+	return fault;
+}
+
+int countFaults(vector<int> mem, int row, int col, int dir, int global) {
+	int fault = rowColToFault(row, col);
+
+	int num = 0;
+	int index = 0;
+
+
+	if (dir == 0) {
+		index = row * 6;
+		if (col <= 5) {
+			for (int i = 0; i < 6; i++) {
+				if (mem[index + i] == 1) {
+					num++;
+				}
+			}
+			if (global == 1) {
+				for (int i = 0; i < 6; i++) {
+					if (mem[i + index + 36] == 1) {
+						num++;
+					}
+				}
+			}
+		}
+		else if (col > 5) {
+			for (int i = 0; i < 6; i++) {
+				if (mem[i + index + 36] == 1) {
+					num++;
+				}
+			}
+
+			if (global == 1) {
+				for (int i = 0; i < 6; i++) {
+					if (mem[i + index] == 1) {
+						num++;
+					}
+				}
+			}
+		}
+	}
+	else if (dir == 1) {
+		if (col <= 5) {
+			index = col;
+			for (int i = 0; i < 6; i = i + 6) {
+				if (mem[i + index] == 1) {
+					num++;
+				}
+			}
+		}
+		else if (col > 5) {
+			index = col + 36;
+			for (int i = 0; i  < 6; i = i + 6) {
+				if (mem[i + index] == 1) {
+					num++;
+				}
+			}
+		}
+	}
+
+	return num;
 }
 
