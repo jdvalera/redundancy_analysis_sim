@@ -108,7 +108,7 @@ bool solveGlobalFaults(vector<vector<int>> &pCAM, vector<vector<int>> &npCAM, ve
 	while(!globalFaults.empty()) {
 		if (globalRow = 0)
 			break;
-		x = findMaxFaults(globalFaults, numFaults, index)
+		x = findMaxFaults(globalFaults, pCAM, index)
 		r = pCAM[x][pRow]
 		c = pCAM[x]pCol]
 		fault = rowColToFault(r, c)
